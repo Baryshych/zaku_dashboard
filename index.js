@@ -97,27 +97,108 @@ timerSlider.onchange = function() {
 // Init slider fill
 [outputSlider, timerSlider].forEach(updateSliderFill);
 
-// Симуляція температури
+/* ─── WebSocket Relay (ESP32 → Server ← Dashboard) ─── */
+const BOARD_NAMES = { b1: 'ДВИГУН', b2: 'СИЛА', b3: 'ЗБРОЯ', b4: 'СЕНС' };
+
+const wsUrl = (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/ws';
+let ws = null;
+let wsRetryDelay = 1000;
+
+function setBoardConn(id, online) {
+    const dot = document.getElementById('conn-' + id);
+    if (dot) dot.className = online ? 'conn-online' : 'conn-offline';
+}
+
+function handleTelemetry(id, d) {
+    if (id === 'b1' && d.temp !== undefined) {
+        const t = Number(d.temp);
+        tempData.push(t); tempData.shift();
+        chart.update('none');
+        document.getElementById('current-temp').textContent = `${Math.round(t)}°C`;
+    }
+    if (id === 'b2') {
+        if (d.charge   !== undefined) document.getElementById('current-charge').textContent   = `${Math.round(d.charge)}%`;
+        if (d.voltage  !== undefined) document.getElementById('current-voltage').textContent  = `${Number(d.voltage).toFixed(1)} В`;
+        if (d.power    !== undefined) {
+            const p = Number(d.power);
+            pwrData.push(p); pwrData.shift();
+            pwrChart.update('none');
+            document.getElementById('current-power').textContent = `${p.toFixed(1)} А`;
+        }
+    }
+}
+
+function connectRelay() {
+    if (ws) return;
+    try { ws = new WebSocket(wsUrl); }
+    catch (e) { addLog('Помилка створення WebSocket'); scheduleReconnect(); return; }
+
+    ws.onopen = () => {
+        wsRetryDelay = 1000;
+        addLog('ПІДКЛЮЧЕНО ДО СЕРВЕРА');
+    };
+
+    ws.onmessage = ev => {
+        let msg;
+        try { msg = JSON.parse(ev.data); }
+        catch (e) { return; }
+
+        if (msg.type === 'board') {
+            setBoardConn(msg.id, msg.online);
+            const name = BOARD_NAMES[msg.id] || msg.id;
+            addLog(`${name}: ${msg.online ? 'ONLINE' : 'OFFLINE'}`);
+        } else if (msg.type === 'telemetry') {
+            handleTelemetry(msg.board, msg.data);
+        } else if (msg.type === 'error') {
+            addLog(`ERR: ${msg.text}`);
+        }
+    };
+
+    ws.onclose = () => {
+        ws = null;
+        addLog('ВІДКЛЮЧЕНО ВІД СЕРВЕРА');
+        Object.keys(BOARD_NAMES).forEach(id => setBoardConn(id, false));
+        scheduleReconnect();
+    };
+
+    ws.onerror = () => {};
+}
+
+function scheduleReconnect() {
+    setTimeout(connectRelay, wsRetryDelay);
+    wsRetryDelay = Math.min(wsRetryDelay * 2, 8000);
+}
+
+function relaySend(obj) {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+}
+
+/* ─── Симуляція (фолбек) ─── */
 setInterval(() => {
     const variation = (Math.random() - 0.5) * 4;
     const newTemp = Math.round(tempData[tempData.length - 1] + variation);
-    tempData.push(newTemp);
-    tempData.shift();
+    tempData.push(newTemp); tempData.shift();
     chart.update('none');
     pwrChart.update('none');
     document.getElementById('current-temp').textContent = `${newTemp}°C`;
 }, 1000);
 
-// Кнопки
-const toggleButtons = ['btn-axe', 'btn-sensors', 'btn-start'];
+/* ─── Кнопки ─── */
+const BTN_MAP = {
+    'btn-pump':    { target: 'b1', cmd: 'pump' },
+    'btn-start':   { target: 'b1', cmd: 'start' },
+    'btn-axe':     { target: 'b3', cmd: 'axe' },
+    'btn-eye':     { target: 'b4', cmd: 'eye' },
+    'btn-sensors': { target: 'b4', cmd: 'sensors' },
+};
 
-toggleButtons.forEach(id => {
+Object.entries(BTN_MAP).forEach(([id, cfg]) => {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.addEventListener('click', () => {
         const isActive = btn.classList.toggle('btn-active');
-        const label = btn.textContent;
-        addLog(`${label} ${isActive ? 'УВІМКНЕНО' : 'ВИМКНЕНО'}`);
+        addLog(`${btn.textContent} ${isActive ? 'УВІМКНЕНО' : 'ВИМКНЕНО'}`);
+        relaySend({ target: cfg.target, cmd: cfg.cmd, state: isActive });
         if (isActive) {
             statusText.textContent = 'РОБОТА';
             statusText.className = 'status-working';
@@ -129,11 +210,11 @@ toggleButtons.forEach(id => {
 });
 
 document.getElementById('btn-stop').onclick = () => {
-    toggleButtons.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.classList.remove('btn-active');
-    });
+    document.querySelectorAll('.btn-active').forEach(b => b.classList.remove('btn-active'));
     statusText.textContent = 'СТОП (АВАРІЙНО)';
     statusText.className = 'status-heating';
-    addLog('АВАРІЙНА ЗУПИНКА СИСТЕМИ! ВСІ МОДУЛІ ДЕАКТИВОВАНО');
+    relaySend({ cmd: 'stop' });
+    addLog('АВАРІЙНА ЗУПИНКА! СИГНАЛ НАДІСЛАНО ВСІМ ПЛАТАМ');
 };
+
+connectRelay();

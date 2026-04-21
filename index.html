@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMOKE-OS // Контрольна панель</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="crt">
+<div class="scanline"></div>
+<div class="overlay"></div>
+
+<div class="container">
+    <header class="header">
+        <div class="logo">
+            <i data-lucide="terminal"></i>
+            <span>ZAKU-OS [v2.0.4]</span>
+        </div>
+        <div class="system-status">
+            СИСТЕМА: <span id="status-text" class="status-ready">ГОТОВА</span>
+            <span class="blink">_</span>
+        </div>
+    </header>
+
+    <main class="grid">
+        <section class="panel metrics">
+            <div class="panel-header">ТЕЛЕМЕТРІЯ</div>
+            <div class="digital-stats">
+                <div class="stat-box">
+                    <span class="label">ТЕМПЕРАТУРА</span>
+                    <span class="value" id="current-temp">180°C</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">ЗАРЯД</span>
+                    <span class="value" id="current-charge">85%</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">НАПРУГА</span>
+                    <span class="value" id="current-voltage">28.0 В</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">ПОТУЖНІСТЬ</span>
+                    <span class="value" id="current-power">20 А</span>
+                </div>
+            </div>
+            <section class="panel logs">
+                <div class="panel-header">СИСТЕМНИЙ ЛОГ</div>
+                <div id="terminal" class="terminal-content">
+                    <div class="log-entry">> Ініціалізація протоколів... OK</div>
+                    <div class="log-entry">> Підключення до дим-машини... OK</div>
+                    <div class="log-entry">> Перевірка рівня рідини... 85%</div>
+                </div>
+            </section>
+        </section>
+
+        <section class="charts">
+            <div class="img-container">
+                <img src="images/zaku%20front.png" class="console-image"/>
+                <img src="images/zaku%20back.png" class="console-image"/>
+            </div>
+            <div>
+                <div class="panel-header">ТЕМПЕРАТУРА ДВИГУНА</div>
+                <div class="gauge-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+                <div class="panel-header">ПОТУЖНІСТЬ РЕАКТОРА</div>
+                <div class="gauge-container">
+                    <canvas id="powerChart"></canvas>
+                </div>
+            </div>
+        </section>
+        <section class="panel controls">
+            <div class="img-container">
+                <img class="logo-img console-image" src="images/red_wolves_empty.png"/>
+            </div>
+            <div>
+                <div class="panel-header">КЕРУВАННЯ ВИХЛОПОМ</div>
+
+                <div class="control-group">
+                    <label>ТЕМПЕРАТУРА (<span id="output-val">70</span>%)</label>
+                    <input type="range" id="smoke-output" min="0" max="100" value="70">
+                </div>
+
+                <div class="control-group">
+                    <label>ПАЛИВО (<span id="timer-val">30</span>%)</label>
+                    <input type="range" id="smoke-timer" min="5" max="100" value="30">
+                </div>
+            </div>
+            <div class="button-grid">
+                <button id="btn-pump" class="btn btn-warning">ПУСК</button>
+                <button id="btn-eye" class="btn btn-warning">СКАН</button>
+                <button id="btn-axe" class="btn btn-primary">ЗБРОЯ</button>
+                <button id="btn-sensors" class="btn btn-primary">СЕНСОРИ</button>
+                <button id="btn-start" class="btn btn-primary">ДВИГУН</button>
+                <button id="btn-stop" class="btn btn-danger">СТОП</button>
+            </div>
+
+            <!--            <div class="toggle-group">-->
+            <!--                <span>АВТО-ПІДІГРІВ</span>-->
+            <!--                <label class="switch">-->
+            <!--                    <input type="checkbox" checked id="preheat-toggle">-->
+            <!--                    <span class="slider"></span>-->
+            <!--                </label>-->
+            <!--            </div>-->
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-item">CPU: 12%</div>
+        <div class="footer-item">UPTIME: 00:42:15</div>
+        <div class="footer-item">IP: 192.168.1.104</div>
+    </footer>
+</div>
+
+<script src="index.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -19,7 +19,22 @@ const mime = {
   '.webp': 'image/webp',
 };
 
+const CHART_JS_PATH = path.join(__dirname, 'node_modules', 'chart.js', 'dist', 'chart.umd.js');
+
 const server = http.createServer((req, res) => {
+  if (req.url === '/chart.js') {
+    fs.readFile(CHART_JS_PATH, (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('chart.js not found. Run: npm install');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/javascript' });
+      res.end(data);
+    });
+    return;
+  }
+
   const reqPath = req.url === '/' ? 'index.html' : req.url;
   const filePath = path.join(STATIC_DIR, decodeURIComponent(reqPath));
   const ext = path.extname(filePath).toLowerCase();

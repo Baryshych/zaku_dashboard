@@ -80,7 +80,12 @@ wss.on('connection', (ws, req) => {
   const registerTimer = setTimeout(() => {
     if (!registered) {
       dashboards.add(ws);
+      console.log(`[DASHBOARD] connected from ${req.socket.remoteAddress} (${dashboards.size} total)`);
       ws.send(JSON.stringify({ type: 'hello', role: 'dashboard' }));
+      // Send current status of all connected boards
+      boards.forEach((_, id) => {
+        ws.send(JSON.stringify({ type: 'board', id: id, online: true }));
+      });
     }
   }, 1500);
 
@@ -88,7 +93,6 @@ wss.on('connection', (ws, req) => {
     let msg;
     try { msg = JSON.parse(raw); }
     catch (e) { return; }
-
     if (!registered && msg.type === 'register' && msg.board) {
       clearTimeout(registerTimer);
       registered = true;
@@ -103,7 +107,13 @@ wss.on('connection', (ws, req) => {
     if (!registered) return;
 
     if (isBoard) {
-      broadcastDashboards({ type: 'telemetry', board: boardId, data: msg });
+      if (msg.type === 'emergency') {
+        broadcastDashboards({ type: 'emergency', board: boardId, reason: msg.reason });
+      } else if (msg.type === 'error') {
+        broadcastDashboards({ type: 'error', board: boardId, text: msg.text });
+      } else {
+        broadcastDashboards({ type: 'telemetry', board: boardId, data: msg });
+      }
     } else {
       if (msg.cmd === 'stop') {
         boards.forEach(bws => {

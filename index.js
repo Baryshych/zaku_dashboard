@@ -20,7 +20,7 @@ const chart = new Chart(ctx, {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-            y: { min: 140, max: 260, grid: { color: '#113311' } },
+            y: { min: 0, max: 260, grid: { color: '#113311' } },
             x: { display: false }
         },
         plugins: { legend: { display: false } }
@@ -97,6 +97,20 @@ timerSlider.onchange = function() {
 // Init slider fill
 [outputSlider, timerSlider].forEach(updateSliderFill);
 
+/* ─── Tab switching ─── */
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        tabBtns.forEach(b => b.classList.remove('tab-active'));
+        tabContents.forEach(c => c.classList.remove('tab-active'));
+        btn.classList.add('tab-active');
+        document.getElementById(targetTab).classList.add('tab-active');
+    });
+});
+
 /* ─── WebSocket Relay (ESP32 → Server ← Dashboard) ─── */
 const BOARD_NAMES = { b1: 'ДВИГУН', b2: 'СИЛА', b3: 'ЗБРОЯ', b4: 'СЕНС' };
 
@@ -110,6 +124,7 @@ function setBoardConn(id, online) {
 }
 
 function handleTelemetry(id, d) {
+    console.log(`[TELEMETRY] ${id}:`, d);
     if (id === 'b1' && d.temp !== undefined) {
         const t = Number(d.temp);
         tempData.push(t); tempData.shift();
@@ -142,13 +157,22 @@ function connectRelay() {
         let msg;
         try { msg = JSON.parse(ev.data); }
         catch (e) { return; }
-
         if (msg.type === 'board') {
             setBoardConn(msg.id, msg.online);
             const name = BOARD_NAMES[msg.id] || msg.id;
-            addLog(`${name}: ${msg.online ? 'ONLINE' : 'OFFLINE'}`);
+            if (msg.online) {
+                addLog(`ПЛАТА ${name} ПІДКЛЮЧЕНА`);
+            } else {
+                addLog(`ПЛАТА ${name} ВІДКЛЮЧЕНА`);
+            }
         } else if (msg.type === 'telemetry') {
             handleTelemetry(msg.board, msg.data);
+        } else if (msg.type === 'emergency') {
+            const name = BOARD_NAMES[msg.board] || msg.board;
+            addLog(`АВАРІЙНА ЗУПИНКА ${name}: ${msg.reason}`);
+            statusText.textContent = 'АВАРІЯ';
+            statusText.className = 'status-heating';
+            document.querySelectorAll('.btn-active').forEach(b => b.classList.remove('btn-active'));
         } else if (msg.type === 'error') {
             addLog(`ERR: ${msg.text}`);
         }
@@ -173,26 +197,32 @@ function relaySend(obj) {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
 }
 
-/* ─── Симуляція (фолбек) ─── */
-setInterval(() => {
-    const variation = (Math.random() - 0.5) * 4;
-    const newTemp = Math.round(tempData[tempData.length - 1] + variation);
-    tempData.push(newTemp); tempData.shift();
-    chart.update('none');
-    pwrChart.update('none');
-    document.getElementById('current-temp').textContent = `${newTemp}°C`;
-}, 1000);
+/* ─── Симуляція (фолбек) — вимкнено, використовується реальна телеметрія ─── */
+// setInterval(() => {
+//     const variation = (Math.random() - 0.5) * 4;
+//     const newTemp = Math.round(tempData[tempData.length - 1] + variation);
+//     tempData.push(newTemp); tempData.shift();
+//     chart.update('none');
+//     pwrChart.update('none');
+//     document.getElementById('current-temp').textContent = `${newTemp}°C`;
+// }, 1000);
 
 /* ─── Кнопки ─── */
-const BTN_MAP = {
-    'btn-pump':    { target: 'b1', cmd: 'pump' },
+// Toggling buttons (btn-primary only)
+const TOGGLE_BTN_MAP = {
     'btn-start':   { target: 'b1', cmd: 'start' },
     'btn-axe':     { target: 'b3', cmd: 'axe' },
-    'btn-eye':     { target: 'b4', cmd: 'eye' },
     'btn-sensors': { target: 'b4', cmd: 'sensors' },
 };
 
-Object.entries(BTN_MAP).forEach(([id, cfg]) => {
+// One-time command buttons (btn-warning, btn-danger)
+const CMD_BTN_MAP = {
+    'btn-pump':    { target: 'b1', cmd: 'pump' },
+    'btn-eye':     { target: 'b4', cmd: 'eye' },
+};
+
+// Toggle button handlers
+Object.entries(TOGGLE_BTN_MAP).forEach(([id, cfg]) => {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.addEventListener('click', () => {
@@ -209,6 +239,17 @@ Object.entries(BTN_MAP).forEach(([id, cfg]) => {
     });
 });
 
+// One-time command button handlers (no state change)
+Object.entries(CMD_BTN_MAP).forEach(([id, cfg]) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        addLog(`Команда "${btn.textContent}" надіслана`);
+        relaySend({ target: cfg.target, cmd: cfg.cmd });
+    });
+});
+
+// Stop button (emergency stop - no toggle, clears all toggles)
 document.getElementById('btn-stop').onclick = () => {
     document.querySelectorAll('.btn-active').forEach(b => b.classList.remove('btn-active'));
     statusText.textContent = 'СТОП (АВАРІЙНО)';

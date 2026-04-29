@@ -82,6 +82,54 @@ body {
     position: relative;
 }
 
+/* Tab navigation */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 5px;
+    width: 100%;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+    transition: 0.3s;
+    flex: 1;
+}
+
+.tab-btn:hover {
+    background: rgba(0, 255, 65, 0.1);
+}
+
+.tab-btn.tab-active {
+    background: var(--accent-color);
+    color: black;
+    box-shadow: 0 0 15px var(--accent-color);
+}
+
+/* Tab content */
+.tab-content {
+    display: none;
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.tab-content.tab-active {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    height: 100%;
+}
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -91,11 +139,15 @@ body {
     box-shadow: var(--border-glow);
 }
 
+main {
+    flex-grow: 1;
+    min-height: 0;
+}
+
 .grid {
     display: grid;
-    grid-template-columns: 1fr 1.5fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
-    flex-grow: 1;
 }
 
 .panel {
@@ -104,7 +156,7 @@ body {
     padding: 15px;
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: flex-start;
     box-shadow: var(--border-glow);
 }
 
@@ -338,4 +390,207 @@ section {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
+}
+
+/* 7-inch tablet optimization (1024x600 and similar) */
+@media screen and (max-width: 1024px) and (min-height: 500px) {
+    .container {
+        padding: 10px;
+    }
+
+    .header {
+        padding: 8px;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+
+    .logo span {
+        font-size: 1rem;
+    }
+
+    .icon-terminal {
+        width: 20px;
+        height: 20px;
+    }
+
+    .system-status {
+        font-size: 0.85rem;
+    }
+
+    .dot-label {
+        font-size: 0.45rem;
+    }
+
+    .tabs {
+        margin-bottom: 10px;
+        gap: 8px;
+    }
+
+    .tab-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .tab-content.tab-active {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    /* Tab 1: metrics + controls (2 panels) */
+    #tab1.tab-active {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* Tab 2: slider-controls + charts + logs (3 panels) */
+    #tab2.tab-active {
+        grid-template-columns: 1fr 1.5fr 1fr;
+    }
+
+    #tab2 .panel.logs {
+        grid-column: 3;
+    }
+
+    .panel {
+        padding: 10px;
+    }
+
+    .panel-header {
+        font-size: 1rem;
+        margin-bottom: 8px;
+        padding-bottom: 4px;
+    }
+
+    /* Larger touch targets */
+    .btn {
+        padding: 18px 12px;
+        font-size: 1.1rem;
+        min-height: 60px;
+    }
+
+    .button-grid {
+        gap: 12px;
+    }
+
+    /* Larger sliders for touch */
+    input[type=range] {
+        height: 22px;
+        margin-top: 15px;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+        height: 22px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+        width: 38px;
+        height: 46px;
+        margin-top: -13px;
+    }
+
+    input[type=range]::-moz-range-track {
+        height: 22px;
+    }
+
+    input[type=range]::-moz-range-thumb {
+        width: 38px;
+        height: 46px;
+    }
+
+    input[type=range]::-moz-range-progress {
+        height: 22px;
+    }
+
+    .control-group {
+        margin-bottom: 15px;
+    }
+
+    .control-group label {
+        font-size: 1rem;
+    }
+
+    /* Stats */
+    .stat-box .value {
+        font-size: 2rem;
+    }
+
+    .stat-box .label {
+        font-size: 0.8rem;
+    }
+
+    .digital-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    /* Terminal */
+    .terminal-content {
+        font-size: 0.75rem;
+        height: 80px;
+        overflow-y: auto;
+    }
+
+    /* Images smaller on tablet */
+    .console-image {
+        max-height: 180px;
+    }
+
+    .img-container {
+        flex-shrink: 0;
+    }
+
+    /* Gauge containers */
+    .gauge-container {
+        height: 70px;
+        flex-shrink: 1;
+        min-height: 0;
+    }
+
+    /* Footer */
+    .footer {
+        font-size: 0.65rem;
+        margin-top: 5px;
+        padding-top: 5px;
+        gap: 15px;
+        padding-bottom: 5px;
+    }
+}
+
+/* Portrait mode for 7-inch tablets */
+@media screen and (max-width: 800px) and (min-height: 600px) {
+    .tab-content.tab-active {
+        grid-template-columns: 1fr;
+    }
+
+    #tab1 .panel.metrics,
+    #tab1 .panel.controls {
+        grid-column: 1;
+    }
+
+    #tab2 .panel.slider-controls,
+    #tab2 .charts,
+    #tab2 .panel.logs {
+        grid-column: 1;
+    }
+
+    .digital-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .stat-box .value {
+        font-size: 1.8rem;
+    }
+
+    .terminal-content {
+        height: 120px;
+    }
+
+    .btn {
+        min-height: 70px;
+        font-size: 1.2rem;
+    }
+
+    .gauge-container {
+        height: 160px;
+    }
 }

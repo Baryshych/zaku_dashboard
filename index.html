@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>SMOKE-OS // Контрольна панель</title>
     <link rel="stylesheet" href="style.css">
     <script src="/chart.js"></script>
@@ -29,27 +29,80 @@
         </div>
     </header>
 
+    <div class="tabs">
+        <button class="tab-btn tab-active" data-tab="tab1">КЕРУВАННЯ</button>
+        <button class="tab-btn" data-tab="tab2">ГРАФІКИ</button>
+    </div>
+
     <main class="grid">
-        <section class="panel metrics">
-            <div class="panel-header">ТЕЛЕМЕТРІЯ</div>
-            <div class="digital-stats">
-                <div class="stat-box">
-                    <span class="label">ТЕМПЕРАТУРА</span>
-                    <span class="value" id="current-temp">180°C</span>
+        <!-- Tab 1: Control buttons + telemetry -->
+        <div id="tab1" class="tab-content tab-active">
+            <section class="panel metrics">
+                <div class="panel-header">ТЕЛЕМЕТРІЯ</div>
+                <div class="digital-stats">
+                    <div class="stat-box">
+                        <span class="label">ТЕМПЕРАТУРА</span>
+                        <span class="value" id="current-temp">180°C</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">ЗАРЯД</span>
+                        <span class="value" id="current-charge">85%</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">НАПРУГА</span>
+                        <span class="value" id="current-voltage">28.0 В</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">ПОТУЖНІСТЬ</span>
+                        <span class="value" id="current-power">20 А</span>
+                    </div>
                 </div>
-                <div class="stat-box">
-                    <span class="label">ЗАРЯД</span>
-                    <span class="value" id="current-charge">85%</span>
+            </section>
+
+            <section class="panel controls">
+                <div class="panel-header">КЕРУВАННЯ</div>
+                <div class="button-grid">
+                    <button id="btn-pump" class="btn btn-warning">ПУСК</button>
+                    <button id="btn-eye" class="btn btn-warning">СКАН</button>
+                    <button id="btn-axe" class="btn btn-primary">ЗБРОЯ</button>
+                    <button id="btn-sensors" class="btn btn-primary">СЕНСОРИ</button>
+                    <button id="btn-start" class="btn btn-primary">ДВИГУН</button>
+                    <button id="btn-stop" class="btn btn-danger">СТОП</button>
                 </div>
-                <div class="stat-box">
-                    <span class="label">НАПРУГА</span>
-                    <span class="value" id="current-voltage">28.0 В</span>
+            </section>
+        </div>
+
+        <!-- Tab 2: Sliders + graphs + log -->
+        <div id="tab2" class="tab-content">
+            <section class="panel slider-controls">
+                <div class="panel-header">КЕРУВАННЯ ВИХЛОПОМ</div>
+                <div class="control-group">
+                    <label>ТЕМПЕРАТУРА (<span id="output-val">70</span>%)</label>
+                    <input type="range" id="smoke-output" min="0" max="100" value="70">
                 </div>
-                <div class="stat-box">
-                    <span class="label">ПОТУЖНІСТЬ</span>
-                    <span class="value" id="current-power">20 А</span>
+                <div class="control-group">
+                    <label>ПАЛИВО (<span id="timer-val">30</span>%)</label>
+                    <input type="range" id="smoke-timer" min="5" max="100" value="30">
                 </div>
-            </div>
+            </section>
+
+            <section class="charts">
+                <div class="img-container">
+                    <img src="images/zaku%20front.png" class="console-image"/>
+                    <img src="images/zaku%20back.png" class="console-image"/>
+                </div>
+                <div>
+                    <div class="panel-header">ТЕМПЕРАТУРА ДВИГУНА</div>
+                    <div class="gauge-container">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                    <div class="panel-header">ПОТУЖНІСТЬ РЕАКТОРА</div>
+                    <div class="gauge-container">
+                        <canvas id="powerChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
             <section class="panel logs">
                 <div class="panel-header">СИСТЕМНИЙ ЛОГ</div>
                 <div id="terminal" class="terminal-content">
@@ -58,58 +111,7 @@
                     <div class="log-entry">> Перевірка рівня рідини... 85%</div>
                 </div>
             </section>
-        </section>
-
-        <section class="charts">
-            <div class="img-container">
-                <img src="images/zaku%20front.png" class="console-image"/>
-                <img src="images/zaku%20back.png" class="console-image"/>
-            </div>
-            <div>
-                <div class="panel-header">ТЕМПЕРАТУРА ДВИГУНА</div>
-                <div class="gauge-container">
-                    <canvas id="tempChart"></canvas>
-                </div>
-                <div class="panel-header">ПОТУЖНІСТЬ РЕАКТОРА</div>
-                <div class="gauge-container">
-                    <canvas id="powerChart"></canvas>
-                </div>
-            </div>
-        </section>
-        <section class="panel controls">
-            <div class="img-container">
-                <img class="logo-img console-image" src="images/red_wolves_empty.png"/>
-            </div>
-            <div>
-                <div class="panel-header">КЕРУВАННЯ ВИХЛОПОМ</div>
-
-                <div class="control-group">
-                    <label>ТЕМПЕРАТУРА (<span id="output-val">70</span>%)</label>
-                    <input type="range" id="smoke-output" min="0" max="100" value="70">
-                </div>
-
-                <div class="control-group">
-                    <label>ПАЛИВО (<span id="timer-val">30</span>%)</label>
-                    <input type="range" id="smoke-timer" min="5" max="100" value="30">
-                </div>
-            </div>
-            <div class="button-grid">
-                <button id="btn-pump" class="btn btn-warning">ПУСК</button>
-                <button id="btn-eye" class="btn btn-warning">СКАН</button>
-                <button id="btn-axe" class="btn btn-primary">ЗБРОЯ</button>
-                <button id="btn-sensors" class="btn btn-primary">СЕНСОРИ</button>
-                <button id="btn-start" class="btn btn-primary">ДВИГУН</button>
-                <button id="btn-stop" class="btn btn-danger">СТОП</button>
-            </div>
-
-            <!--            <div class="toggle-group">-->
-            <!--                <span>АВТО-ПІДІГРІВ</span>-->
-            <!--                <label class="switch">-->
-            <!--                    <input type="checkbox" checked id="preheat-toggle">-->
-            <!--                    <span class="slider"></span>-->
-            <!--                </label>-->
-            <!--            </div>-->
-        </section>
+        </div>
     </main>
 
     <footer class="footer">
